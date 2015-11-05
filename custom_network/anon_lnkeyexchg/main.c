@@ -49,7 +49,7 @@ int main(int argc, const char * argv[]) {
         exit(1);
     }
     
-    if (strcmp("-f", argv[4]) != 0) {
+    if (strcmp("-d", argv[4]) != 0) {
         print_usage();
         exit(1);
     }
@@ -148,7 +148,7 @@ int main(int argc, const char * argv[]) {
 void print_usage() {
     fprintf(stderr, "Error: invalid options\n");
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  lnkeyexchg -s -src 1 -f /path/to/keystore/directory -i eth0,eth1\n");
-    fprintf(stderr, "  lnkeyexchg -c -src 2 -f /path/to/keystore/directory -i eth0\n");
+    fprintf(stderr, "  lnkeyexchg -s -src 1 -d /path/to/keystore/directory -i eth0,eth1\n");
+    fprintf(stderr, "  lnkeyexchg -c -src 2 -d /path/to/keystore/directory -i eth0\n");
 }
 
