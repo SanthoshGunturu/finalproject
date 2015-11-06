@@ -28,6 +28,8 @@ struct layer2 {
 #define TYPE_ICMP 0
 #define TYPE_UDP 1
 #define TYPE_LINKKEYEXCHG 2
+#define MTU 1500
+#define HELLO_DATA_BYTES 1493
 struct layer3 {
     uint8_t  type;
     uint8_t  ttl;
