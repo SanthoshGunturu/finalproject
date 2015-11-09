@@ -19,6 +19,7 @@
 #include "client.h"
 
 void print_usage();
+
 int main(int argc, const char * argv[]) {
     
     char *keystoredir;
@@ -134,10 +135,10 @@ int main(int argc, const char * argv[]) {
     
     
     if (strcmp("-s", argv[1]) == 0) {
-        server(src, keystoredir, num_input_interfaces, input_interface);
+        server(src, keystoredir, num_input_interfaces, &input_interface);
     }
     else if (strcmp("-c", argv[1]) == 0) {
-        client(src, keystoredir, num_input_interfaces, input_interface);
+        client(src, keystoredir, num_input_interfaces, &input_interface);
     }
     
     return 0;

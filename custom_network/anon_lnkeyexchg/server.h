@@ -2,7 +2,6 @@
 //  server.h
 //  custom_network
 //
-//  Copyright (c) 2015 Peera Yoodee. All rights reserved.
 //
 
 #ifndef __custom_network__server__
@@ -24,13 +23,19 @@
 #include <linux/if_packet.h>
 #include <linux/filter.h>
 
+#include <sys/stat.h>
+#include <sys/select.h>
+
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include <openssl/aes.h>
-#include <openssl/rand.h>
+
 #include "../interface.h"
 #include "../layers_anon.h"
+#include "define.h"
+#include "rsa.h"
 
-void server(uint16_t src, const char *keystoredir, int num_interfaces, struct interface *interface);
+#define _DEBUG
+
+void server(uint16_t src, const char *keystoredir, int num_interfaces, struct interface **interface);
 
 #endif /* defined(__custom_network__server__) */
