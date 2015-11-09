@@ -40,24 +40,24 @@ int public_encrypt(unsigned char * data,int data_len,unsigned char * key, unsign
     int result = RSA_public_encrypt(data_len,data,encrypted,rsa,padding);
     return result;
 }
-int private_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
+/*int private_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
 {
     RSA * rsa = createRSA(key,0);
     int  result = RSA_private_decrypt(data_len,enc_data,decrypted,rsa,padding);
     return result;
-}
+}*/
 int private_encrypt(unsigned char * data,int data_len,unsigned char * key, unsigned char *encrypted)
 {
     RSA * rsa = createRSA(key,0);
     int result = RSA_private_encrypt(data_len,data,encrypted,rsa,padding);
     return result;
 }
-int public_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
+/*int public_decrypt(unsigned char * enc_data,int data_len,unsigned char * key, unsigned char *decrypted)
 {
     RSA * rsa = createRSA(key,1);
     int  result = RSA_public_decrypt(data_len,enc_data,decrypted,rsa,padding);
     return result;
-}
+}*/
 
 
 
@@ -69,9 +69,11 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
 	unsigned char *publickey;
 	unsigned char symkey[32];
 	char *symkeyfile;
+	FILE *symkeyFilefp;
 	symkeyfile  = (char *) malloc(strlen(keystoredir) + strlen(interface->interface_name)+ 1);
 	strcpy(symkeyfile, keystoredir);
 	strcat(symkeyfile, interface->interface_name);
+	symkeyFilefp = fopen(symkeyfile,"wb");
 	//unsigned char  encrypted[MTU]={};
 	unsigned char encrypted_key[ENC_BUF_LEN]={};
 	//AES_KEY enc_key;
@@ -136,7 +138,6 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
 			memset(publickey,0x00,ntohs(l4_pub->pubkeylen));
 	    		header_size = sizeof(struct layer2) + sizeof(struct layer3)+sizeof(struct layer4_linkkeyexchange_pubkey);
 			memcpy(publickey, recvbuffer+header_size,ntohs(l4_pub->pubkeylen));
-                	fprintf(stdout, "[DEBUG] Recv: ACK 0x%.6llx\n", publickey);
            		memset(buffer,0x00,MTU);
 			l2->original_source_addr = htons(src);
 		        // Read Path
@@ -150,13 +151,25 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
 			
 			l4_pub_propose->linkkeylen = 32;
 			int encrypted_length= public_encrypt(symkey,32,publickey,encrypted_key); 
+			printf("encrypted_length is %d\n",encrypted_length);
 			l4_pub_propose->enclinkkeylen =  encrypted_length;
 			memcpy(buffer+ sizeof(struct layer2) + sizeof(struct layer3)+sizeof(struct layer4_linkkeyexchange_propose),encrypted_key,encrypted_length);
 			size_t enc_pkt_len = sizeof(struct layer2) + sizeof(struct layer3)+sizeof(struct layer4_linkkeyexchange_propose)+encrypted_length;  
 			send(sockfd, buffer , enc_pkt_len, 0 );
+			memset(recvbuffer,0x00,MTU);
+			recvlen = recv(sockfd, recvbuffer, MTU, 0);
+        		if (recvlen != -1UL) {
+				l4 = (struct layer4_linkkeyexchange *) (recvbuffer + sizeof(struct layer2) + sizeof(struct layer3));
+				printf("type layer 4 %d ",l4->type);
+				if(l4->type==3){
+					if (symkeyFilefp ){
+				        	fwrite(symkey,1,sizeof(symkey),symkeyFilefp); 	
+						fclose(symkeyFilefp);
+					}
+				}
+			}
 			
-			
-	   }
+		}
 	    
 	}
         else {
