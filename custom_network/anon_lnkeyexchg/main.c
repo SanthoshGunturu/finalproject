@@ -19,7 +19,6 @@
 #include "client.h"
 
 void print_usage();
-
 int main(int argc, const char * argv[]) {
     
     char *keystoredir;

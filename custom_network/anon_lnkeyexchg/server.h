@@ -26,7 +26,8 @@
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-
+#include <openssl/aes.h>
+#include <openssl/rand.h>
 #include "../interface.h"
 #include "../layers_anon.h"
 
