@@ -17,7 +17,7 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
     FILE *file_linkkey;
     
     char hello[6] = "Hello";
-    unsigned char buffer_recv[MTU], buffer_send[MTU], *publickey, linkkey[LINKKEY_LENGTH], encrypted_linkkey[RSA_KEY_LENGTH_BIT/8];
+    unsigned char buffer_recv[MTU], buffer_sock[MTU], *publickey, linkkey[LINKKEY_LENGTH], encrypted_linkkey[RSA_KEY_LENGTH_BIT/8];
     
     struct layer2 *l2;
     struct layer3 *l3;
@@ -55,16 +55,16 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
     timeout.tv_sec = 1;
     timeout.tv_usec = 0L;
     
-    l2 = (struct layer2 *) buffer_send;
-    l3 = (struct layer3 *) (buffer_send + sizeof(struct layer2));
-    l4 = (struct layer4_linkkeyexchange *) (buffer_send + sizeof(struct layer2) + sizeof(struct layer3));
-    l4_pubkey  = (struct layer4_linkkeyexchange_pubkey *) (buffer_send + sizeof(struct layer2) + sizeof(struct layer3));
-    l4_propose = (struct layer4_linkkeyexchange_propose *) (buffer_send + sizeof(struct layer2) + sizeof(struct layer3));
+    l2 = (struct layer2 *) buffer_sock;
+    l3 = (struct layer3 *) (buffer_sock + sizeof(struct layer2));
+    l4 = (struct layer4_linkkeyexchange *) (buffer_sock + sizeof(struct layer2) + sizeof(struct layer3));
+    l4_pubkey  = (struct layer4_linkkeyexchange_pubkey *) (buffer_sock + sizeof(struct layer2) + sizeof(struct layer3));
+    l4_propose = (struct layer4_linkkeyexchange_propose *) (buffer_sock + sizeof(struct layer2) + sizeof(struct layer3));
     header_length = sizeof(struct layer2) + sizeof(struct layer3);
     
     // Initialize socket buffer
     memset(buffer_recv, 0, sizeof(buffer_recv));
-    memset(buffer_send, 0, sizeof(buffer_send));
+    memset(buffer_sock, 0, sizeof(buffer_sock));
     
     // Initialize packet header
     l3->type = TYPE_LINKKEYEXCHG;
@@ -122,21 +122,21 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
         // Construct a 'Link Key Exchange Request' packet
         l2->original_source_addr = htons(src);
         l4->type = TYPE_LINKKEYEXCHANGE_REQUEST;
-        memcpy(buffer_send + header_length + sizeof(struct layer4_linkkeyexchange), hello, strlen(hello));
+        memcpy(buffer_sock + header_length + sizeof(struct layer4_linkkeyexchange), hello, strlen(hello));
         
         while(1) {
             
-            send(sockfd[i], buffer_send, header_length + sizeof(struct layer4_linkkeyexchange) + strlen(hello), 0);
+            send(sockfd[i], buffer_sock, header_length + sizeof(struct layer4_linkkeyexchange) + strlen(hello), 0);
             printf("Send Request exchangeid=0x%.2x\n", l4->exchgid);
             
-            recvlen = recv(sockfd[i], buffer_send, MTU, 0);
+            recvlen = recv(sockfd[i], buffer_sock, MTU, 0);
             if ((recvlen != -1) && (l4->type == TYPE_LINKKEYEXCHANGE_PUBKEY)) {
                 printf("Recv PublicKey from host=%d exchangeid=0x%.2x\n", ntohs(l2->original_source_addr), l4->exchgid);
                 break;
             }
         }
         
-        publickey = buffer_send + header_length + sizeof(struct layer4_linkkeyexchange_pubkey);
+        publickey = buffer_sock + header_length + sizeof(struct layer4_linkkeyexchange_pubkey);
         
         // Print public key
         #ifdef _DEBUG
@@ -176,15 +176,15 @@ void client(uint16_t src, const char *keystoredir, int num_interfaces, struct in
         
         // Put the encrypted link key and its length into the packet
         l4_propose->enclinkkeylen = htons((uint16_t) encrypted_linkkey_length);
-        memcpy(buffer_send + header_length + sizeof(struct layer4_linkkeyexchange_propose), encrypted_linkkey, encrypted_linkkey_length);
+        memcpy(buffer_sock + header_length + sizeof(struct layer4_linkkeyexchange_propose), encrypted_linkkey, encrypted_linkkey_length);
         
         // Send the 'Propose Link Key' packet
-        send(sockfd[i], buffer_send, header_length + sizeof(struct layer4_linkkeyexchange_propose) + encrypted_linkkey_length, 0);
+        send(sockfd[i], buffer_sock, header_length + sizeof(struct layer4_linkkeyexchange_propose) + encrypted_linkkey_length, 0);
         printf("Send Purposed Link Key exchangeid=0x%.2x\n", l4->exchgid);
         
 
         // Receive an 'Agree' packet within the timeout
-        recvlen = recv(sockfd[i], buffer_send, MTU, 0);
+        recvlen = recv(sockfd[i], buffer_sock, MTU, 0);
         if ((recvlen != -1) && (l4->type == TYPE_LINKKEYEXCHANGE_AGREE)) {
             
             printf("Recv Agree from host=%d exchangeid=0x%.2x\n", ntohs(l2->original_source_addr), l4->exchgid);
