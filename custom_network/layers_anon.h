@@ -28,8 +28,6 @@ struct layer2 {
 #define TYPE_ICMP 0
 #define TYPE_UDP 1
 #define TYPE_LINKKEYEXCHG 2
-#define MTU 1500
-#define HELLO_DATA_BYTES 1493
 struct layer3 {
     uint8_t  type;
     uint8_t  ttl;
@@ -51,6 +49,10 @@ struct layer4_udp {
     uint8_t  padding[4];
 };
 
+#define TYPE_LINKKEYEXCHANGE_REQUEST 0
+#define TYPE_LINKKEYEXCHANGE_PUBKEY 1
+#define TYPE_LINKKEYEXCHANGE_PROPOSE 2
+#define TYPE_LINKKEYEXCHANGE_AGREE 3
 struct layer4_linkkeyexchange {
     uint8_t type;
     uint8_t exchgid;
